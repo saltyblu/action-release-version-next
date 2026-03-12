@@ -1,4 +1,4 @@
-# action-release-version
+# action-release-next-version
 
 GitHub Action to calculate the next semantic version from commit history.
 

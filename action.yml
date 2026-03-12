@@ -1,4 +1,4 @@
-name: Determine Next Version
+name: Determine next semantic version
 description: Computes the next semantic version from commit history (push or pull_request) using conventional commits.
 
 inputs:
