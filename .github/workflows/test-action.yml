@@ -21,7 +21,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Node unit tests
-        run: node --test
+        run: make test
 
       - name: Prepare fixture repo for subpath and root tests
         run: |
