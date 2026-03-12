@@ -256,10 +256,22 @@ function main() {
   console.log(`next-tag=${nextTag}`);
 }
 
-try {
-  main();
-} catch (error) {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(message);
-  process.exitCode = 1;
+if (require.main === module) {
+  try {
+    main();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(message);
+    process.exitCode = 1;
+  }
 }
+
+module.exports = {
+  parseVersion,
+  compareVersions,
+  determineRange,
+  bumpPriority,
+  detectCommitBump,
+  computeNextVersion,
+  stringifyVersion,
+};

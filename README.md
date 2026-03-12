@@ -72,3 +72,12 @@ jobs:
   - subpath filtering via `working-directory`
   - root repository behavior
   - non-conventional commit fallback to patch bump
+
+## Unit tests
+
+- Unit tests use the built-in Node test runner.
+- Run locally with:
+
+```bash
+node --test
+```

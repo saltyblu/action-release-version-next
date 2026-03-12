@@ -20,6 +20,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Run Node unit tests
+        run: node --test
+
       - name: Prepare fixture repo for subpath and root tests
         run: |
           set -euo pipefail
