@@ -1,0 +1,26 @@
+name: Determine Next Version
+description: Computes the next semantic version from commit history (push or pull_request) using conventional commits.
+
+inputs:
+  tag-prefix:
+    description: Prefix used for tags, e.g. v for tags like v1.2.3
+    required: false
+    default: ""
+  working-directory:
+    description: Directory where git commands should run
+    required: false
+    default: "."
+
+outputs:
+  next-version:
+    description: Calculated semantic version without tag prefix
+  next-tag:
+    description: Calculated tag including configured prefix
+  bump-type:
+    description: Detected bump type (major, minor, patch)
+  commit-count:
+    description: Number of commits considered for calculation
+
+runs:
+  using: node20
+  main: index.js
