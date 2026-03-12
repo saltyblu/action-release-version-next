@@ -1,0 +1,120 @@
+name: Test Action
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-action:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prepare fixture repo for subpath and root tests
+        run: |
+          set -euo pipefail
+
+          rm -rf .tmp/test-repo
+          mkdir -p .tmp/test-repo
+          cd .tmp/test-repo
+
+          git init -b main
+          git config user.name "CI"
+          git config user.email "ci@example.com"
+
+          mkdir -p app
+          echo "initial" > app/file.txt
+          git add .
+          git commit -m "chore: initial"
+          git tag v0.1.0
+
+          echo "feature" > app/feature.txt
+          git add app/feature.txt
+          git commit -m "feat: add app feature"
+
+          echo "docs" > README.md
+          git add README.md
+          git commit -m "docs: update root docs"
+
+      - name: Run action on subpath
+        id: subpath
+        uses: ./
+        env:
+          GITHUB_EVENT_NAME: workflow_dispatch
+        with:
+          tag-prefix: v
+          working-directory: .tmp/test-repo/app
+
+      - name: Assert subpath result
+        run: |
+          set -euo pipefail
+          test "${{ steps.subpath.outputs.next-version }}" = "0.2.0"
+          test "${{ steps.subpath.outputs.next-tag }}" = "v0.2.0"
+          test "${{ steps.subpath.outputs.bump-type }}" = "minor"
+          test "${{ steps.subpath.outputs.commit-count }}" = "1"
+
+      - name: Run action on repo root
+        id: root
+        uses: ./
+        env:
+          GITHUB_EVENT_NAME: workflow_dispatch
+        with:
+          tag-prefix: v
+          working-directory: .tmp/test-repo
+
+      - name: Assert root result
+        run: |
+          set -euo pipefail
+          test "${{ steps.root.outputs.next-version }}" = "0.2.0"
+          test "${{ steps.root.outputs.next-tag }}" = "v0.2.0"
+          test "${{ steps.root.outputs.bump-type }}" = "minor"
+          test "${{ steps.root.outputs.commit-count }}" = "2"
+
+      - name: Prepare fixture repo for non-conventional patch fallback
+        run: |
+          set -euo pipefail
+
+          rm -rf .tmp/test-repo-patch
+          mkdir -p .tmp/test-repo-patch
+          cd .tmp/test-repo-patch
+
+          git init -b main
+          git config user.name "CI"
+          git config user.email "ci@example.com"
+
+          mkdir -p service
+          echo "initial" > service/file.txt
+          git add .
+          git commit -m "chore: initial"
+          git tag v0.1.0
+
+          echo "change" > service/changed.txt
+          git add service/changed.txt
+          git commit -m "just some update"
+
+      - name: Run action for non-conventional commit
+        id: patch
+        uses: ./
+        env:
+          GITHUB_EVENT_NAME: workflow_dispatch
+        with:
+          tag-prefix: v
+          working-directory: .tmp/test-repo-patch/service
+
+      - name: Assert patch fallback result
+        run: |
+          set -euo pipefail
+          test "${{ steps.patch.outputs.next-version }}" = "0.1.1"
+          test "${{ steps.patch.outputs.next-tag }}" = "v0.1.1"
+          test "${{ steps.patch.outputs.bump-type }}" = "patch"
+          test "${{ steps.patch.outputs.commit-count }}" = "1"

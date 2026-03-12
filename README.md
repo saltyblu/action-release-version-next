@@ -64,3 +64,11 @@ jobs:
 
 - For correct tag and history detection, use `fetch-depth: 0` in checkout.
 - The action intentionally does not implement prerelease semantics.
+
+## Self-test workflow
+
+- The repository includes a workflow test in `.github/workflows/test-action.yml`.
+- It validates:
+  - subpath filtering via `working-directory`
+  - root repository behavior
+  - non-conventional commit fallback to patch bump
