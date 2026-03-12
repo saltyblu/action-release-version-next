@@ -1,0 +1,27 @@
+name: Unit Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
+      - name: Run unit tests with coverage
+        run: |
+          node --test \
+            --test-coverage \
+            --test-coverage-lines=80 \
+            --test-coverage-branches=70 \
+            --test-coverage-functions=80
