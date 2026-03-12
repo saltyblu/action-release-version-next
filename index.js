@@ -123,11 +123,28 @@ function determineRange(eventName, payload, latestTag) {
   };
 }
 
-function collectCommits(cwd, range) {
+function getCommitPathFilter(cwd) {
+  const repoRoot = git(["rev-parse", "--show-toplevel"], { cwd });
+  const relativePath = path.relative(repoRoot, cwd);
+
+  if (!relativePath || relativePath === ".") {
+    return null;
+  }
+
+  // Git pathspecs should use POSIX separators.
+  return relativePath.split(path.sep).join("/");
+}
+
+function collectCommits(cwd, range, commitPathFilter) {
   const separatorCommit = "\u001e";
   const separatorField = "\u001f";
 
-  const raw = git(["log", "--format=%H%x1f%s%x1f%b%x1e", "--no-merges", range], { cwd });
+  const args = ["log", "--format=%H%x1f%s%x1f%b%x1e", "--no-merges", range];
+  if (commitPathFilter) {
+    args.push("--", commitPathFilter);
+  }
+
+  const raw = git(args, { cwd });
   if (!raw) {
     return [];
   }
@@ -209,7 +226,8 @@ function main() {
   const baseVersion = latestTag?.version || { major: 0, minor: 0, patch: 0 };
 
   const { range, mode } = determineRange(eventName, payload, latestTag);
-  const commits = collectCommits(cwd, range);
+  const commitPathFilter = getCommitPathFilter(cwd);
+  const commits = collectCommits(cwd, range, commitPathFilter);
 
   let bumpType = "patch";
   for (const commit of commits) {
@@ -230,6 +248,7 @@ function main() {
 
   console.log(`mode=${mode}`);
   console.log(`range=${range}`);
+  console.log(`path-filter=${commitPathFilter || "<repo-root>"}`);
   console.log(`latest-tag=${latestTag?.tag || "<none>"}`);
   console.log(`base-version=${stringifyVersion(baseVersion)}`);
   console.log(`bump-type=${bumpType}`);

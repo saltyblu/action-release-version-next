@@ -10,6 +10,7 @@ Supports `push` and `pull_request` contexts.
   - Prefix for git tags, e.g. `v` for tags like `v0.3.7`.
 - `working-directory` (optional, default: `.`)
   - Directory where git commands should run.
+  - If this points to a subdirectory inside the repository, only commits that touched this subpath are considered.
 
 ## Outputs
 
