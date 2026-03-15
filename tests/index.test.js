@@ -5,6 +5,7 @@ const {
   parseVersion,
   compareVersions,
   determineRange,
+  toTopAnchoredPathspec,
   resolveRangeWithFallback,
   bumpPriority,
   detectCommitBump,
@@ -105,6 +106,11 @@ test("resolveRangeWithFallback uses HEAD when refs are invalid and no tag exists
     range: "HEAD",
     mode: "head_only_fallback",
   });
+});
+
+test("toTopAnchoredPathspec creates root-anchored git pathspec", () => {
+  assert.equal(toTopAnchoredPathspec("app"), ":(top)app");
+  assert.equal(toTopAnchoredPathspec("app/nested"), ":(top)app/nested");
 });
 
 test("detectCommitBump handles conventional and non-conventional commits", () => {

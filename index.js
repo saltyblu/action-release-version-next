@@ -134,6 +134,11 @@ function determineRange(eventName, payload, latestTag) {
   };
 }
 
+function toTopAnchoredPathspec(relativePath) {
+  const posixPath = relativePath.split(path.sep).join("/");
+  return `:(top)${posixPath}`;
+}
+
 function resolveRangeWithFallback(range, mode, latestTag, hasRef) {
   if (!range.includes("..")) {
     return { range, mode };
@@ -165,8 +170,8 @@ function getCommitPathFilter(cwd) {
     return null;
   }
 
-  // Git pathspecs should use POSIX separators.
-  return relativePath.split(path.sep).join("/");
+  // Use a top-anchored pathspec so filtering works even when git runs from a subdirectory.
+  return toTopAnchoredPathspec(relativePath);
 }
 
 function collectCommits(cwd, range, commitPathFilter) {
@@ -313,6 +318,7 @@ module.exports = {
   parseVersion,
   compareVersions,
   determineRange,
+  toTopAnchoredPathspec,
   resolveRangeWithFallback,
   bumpPriority,
   detectCommitBump,
