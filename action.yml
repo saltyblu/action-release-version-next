@@ -1,4 +1,4 @@
-name: Determine next semantic version
+name: action-release-version-next
 description: Computes the next semantic version from commit history (push or pull_request) using conventional commits.
 
 inputs:

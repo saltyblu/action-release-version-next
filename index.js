@@ -5,8 +5,10 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
 function getInput(name, fallback = "") {
-  const key = `INPUT_${name.toUpperCase().replace(/-/g, "_")}`;
-  return (process.env[key] ?? fallback).trim();
+  const githubActionsKey = `INPUT_${name.toUpperCase().replace(/ /g, "_")}`;
+  const legacyKey = `INPUT_${name.toUpperCase().replace(/[- ]/g, "_")}`;
+  const value = process.env[githubActionsKey] ?? process.env[legacyKey] ?? fallback;
+  return value.trim();
 }
 
 function setOutput(name, value) {
