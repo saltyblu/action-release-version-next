@@ -18,5 +18,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
       - name: Run unit tests with coverage
         run: make coverage
