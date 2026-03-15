@@ -5,6 +5,7 @@ const {
   parseVersion,
   compareVersions,
   determineRange,
+  resolveRangeWithFallback,
   bumpPriority,
   detectCommitBump,
   computeNextVersion,
@@ -61,6 +62,48 @@ test("determineRange falls back to latest tag or HEAD", () => {
   assert.deepEqual(determineRange("workflow_dispatch", {}, null), {
     range: "HEAD",
     mode: "head_only",
+  });
+});
+
+test("resolveRangeWithFallback keeps valid ranges", () => {
+  const result = resolveRangeWithFallback(
+    "abc123..def456",
+    "push",
+    { tag: "v1.0.0" },
+    () => true
+  );
+
+  assert.deepEqual(result, {
+    range: "abc123..def456",
+    mode: "push",
+  });
+});
+
+test("resolveRangeWithFallback uses latest tag when refs are invalid", () => {
+  const result = resolveRangeWithFallback(
+    "abc123..def456",
+    "push",
+    { tag: "v1.0.0" },
+    () => false
+  );
+
+  assert.deepEqual(result, {
+    range: "v1.0.0..HEAD",
+    mode: "since_latest_tag_fallback",
+  });
+});
+
+test("resolveRangeWithFallback uses HEAD when refs are invalid and no tag exists", () => {
+  const result = resolveRangeWithFallback(
+    "abc123..def456",
+    "push",
+    null,
+    () => false
+  );
+
+  assert.deepEqual(result, {
+    range: "HEAD",
+    mode: "head_only_fallback",
   });
 });
 

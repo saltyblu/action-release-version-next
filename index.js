@@ -39,6 +39,15 @@ function git(args, options = {}) {
   return (result.stdout || "").trim();
 }
 
+function gitRefExists(cwd, ref) {
+  const result = spawnSync("git", ["rev-parse", "--verify", `${ref}^{commit}`], {
+    cwd,
+    encoding: "utf8",
+    env: process.env,
+  });
+  return result.status === 0;
+}
+
 function parseEventPayload() {
   const eventPath = process.env.GITHUB_EVENT_PATH;
   if (!eventPath) {
@@ -122,6 +131,29 @@ function determineRange(eventName, payload, latestTag) {
   return {
     range: "HEAD",
     mode: "head_only",
+  };
+}
+
+function resolveRangeWithFallback(range, mode, latestTag, hasRef) {
+  if (!range.includes("..")) {
+    return { range, mode };
+  }
+
+  const [fromRef, toRef] = range.split("..");
+  if (hasRef(fromRef) && hasRef(toRef)) {
+    return { range, mode };
+  }
+
+  if (latestTag?.tag) {
+    return {
+      range: `${latestTag.tag}..HEAD`,
+      mode: "since_latest_tag_fallback",
+    };
+  }
+
+  return {
+    range: "HEAD",
+    mode: "head_only_fallback",
   };
 }
 
@@ -227,7 +259,16 @@ function main() {
   const latestTag = findLatestTag(cwd, tagPrefix);
   const baseVersion = latestTag?.version || { major: 0, minor: 0, patch: 0 };
 
-  const { range, mode } = determineRange(eventName, payload, latestTag);
+  const selectedRange = determineRange(eventName, payload, latestTag);
+  const resolvedRange = resolveRangeWithFallback(
+    selectedRange.range,
+    selectedRange.mode,
+    latestTag,
+    (ref) => gitRefExists(cwd, ref)
+  );
+
+  const range = resolvedRange.range;
+  const mode = resolvedRange.mode;
   const commitPathFilter = getCommitPathFilter(cwd);
   const commits = collectCommits(cwd, range, commitPathFilter);
 
@@ -272,6 +313,7 @@ module.exports = {
   parseVersion,
   compareVersions,
   determineRange,
+  resolveRangeWithFallback,
   bumpPriority,
   detectCommitBump,
   computeNextVersion,
